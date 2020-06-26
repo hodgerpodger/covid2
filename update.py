@@ -127,7 +127,7 @@ def plot_it(df, county, state, filename, labels, population):
 
     # Plot phase 2 line
     cases = float(population) / 100000.0 / 14.0 * 25.0
-    ax.plot(x, len(x)*[cases], label='phase 2 entry', color='orange')
+    ax.plot(x, len(x)*[cases], label='phase 2 entry ({})'.format(round(cases)), color='orange')
 
     # Add legend
     ax.legend()
