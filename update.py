@@ -28,19 +28,6 @@ with open(COUNTIES_JSON) as json_file:
     COUNTIES = data
 
 
-print("COUNTIES is")
-print(COUNTIES)
-
-"""
-COUNTIES = [
-    ['King', 'Washington', 1],
-    ['Santa Clara', 'California', 2],
-    ['San Mateo', 'California', 3],
-    ['Los Angeles', 'California', 4],
-    ['New York City', 'New York', 5]
-]
-"""
-
 def _cmd(command):
     logging.debug(command)
     os.system(command)
