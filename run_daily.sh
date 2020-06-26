@@ -11,6 +11,6 @@ cd web
 php index.php > index.html
 
 git add .
-git commit
+git commit -m "daily bot"
 git push
 
