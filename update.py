@@ -12,6 +12,7 @@ import logging
 import json
 import matplotlib.pylab as pylab
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import numpy as np
 import pandas as pd
 import os
@@ -103,7 +104,7 @@ def add_labels(ax, x, y):
         )
 
 
-def plot_it(df, county, state, filename, labels=False):
+def plot_it(df, county, state, filename, labels, population):
     x = df['date'].to_numpy()
     y = df['new_cases'].to_numpy()
     y_avg = moving_average(y, 5)
@@ -115,15 +116,21 @@ def plot_it(df, county, state, filename, labels=False):
               'xtick.labelsize': 18,
               'ytick.labelsize': 18}
     pylab.rcParams.update(params)
-    import matplotlib.dates as mdates
 
     fig, ax = plt.subplots()
 
     # Plot data
-    ax.scatter(x, y, color='deepskyblue')
-    ax.plot(x, y_avg, color='blue')
+    ax.scatter(x, y, color='deepskyblue', label='new cases')
+    ax.plot(x, y_avg, color='blue', label='new cases moving average')
     ax.set_xlabel('Date')
     ax.set_ylabel('New Cases')
+
+    # Plot phase 2 line
+    cases = float(population) / 100000.0 / 14.0 * 25.0
+    ax.plot(x, len(x)*[cases], label='phase 2 entry', color='orange')
+
+    # Add legend
+    ax.legend()
 
     # Add label values to data points
     if labels:
@@ -133,8 +140,6 @@ def plot_it(df, county, state, filename, labels=False):
     title = '{} County, {}'.format(county, state)
     if len(df) == 60:
         title += ' (Last 2 Months)'
-
-
     ax.set_title(label=title, fontsize=22)
     ax.grid(axis='x', color='gray')
 
@@ -150,14 +155,14 @@ def plot_it(df, county, state, filename, labels=False):
     plt.savefig(filename)
     logging.info("Wrote to {}".format(filename))
 
-def make_plots(df, county, state, label):
+def make_plots(df, county, state, label, population):
     filename1 = IMAGEDIR + "/" + label + "_1.png"
     df_county = df_onecounty(df, county, state)
-    plot_it(df_county, county, state, filename1)
+    plot_it(df_county, county, state, filename1, False, population)
 
     filename2 = IMAGEDIR + "/" + label + "_2.png"
     df2 = df_county.tail(60)
-    plot_it(df2, county, state, filename2, True)
+    plot_it(df2, county, state, filename2, True, population)
 
     return filename1, filename2
 
@@ -189,9 +194,9 @@ def main():
     df = read_csvs()
 
     # Make graph png's
-    for county, state, label in COUNTIES:
+    for county, state, label, population in COUNTIES:
         logging.info("Transforming and plotting for county=%s ...", county)
-        img1, img2 = make_plots(df, county, state, label)
+        img1, img2 = make_plots(df, county, state, label, population)
 
         path = "{}/{}_1.png".format(WEBDIR, label)
         _cmd("cp {} {}".format(img1, path))
