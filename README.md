@@ -2,7 +2,9 @@
 
 ```
 # Update all
-sh update.sh
+python update.py
+cd web
+php index.php > index.html
 
 # Update without download source data
 python update.py --skip
