@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.INFO)
 
 DATADIR = "data/csse"
 IMAGEDIR = "data/images"
-WEBDIR = "web/images"
+WEBDIR = "docs/images"
 COUNTIES_JSON = 'counties.json'
 COUNTIES = None
 with open(COUNTIES_JSON) as json_file:
