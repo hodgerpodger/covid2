@@ -9,6 +9,8 @@ https://towardsdatascience.com/a-short-review-of-covid-19-data-sources-ba7f7aa1c
 import argparse
 import datetime
 import logging
+import json
+import matplotlib.pylab as pylab
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -17,15 +19,27 @@ logging.basicConfig(level=logging.INFO)
 
 
 DATADIR = "data/csse"
-IMAGEDIR = "images"
-COUNTIES = [
-    ['King', 'Washington'],
-    ['Santa Clara', 'California'],
-    ['San Mateo', 'California'],
-    ['Los Angeles', 'California'],
-    ['New York City', 'New York']
-]
+IMAGEDIR = "data/images"
+WEBDIR = "web/images"
+COUNTIES_JSON = 'counties.json'
+COUNTIES = None
+with open(COUNTIES_JSON) as json_file:
+    data = json.load(json_file)
+    COUNTIES = data
 
+
+print("COUNTIES is")
+print(COUNTIES)
+
+"""
+COUNTIES = [
+    ['King', 'Washington', 1],
+    ['Santa Clara', 'California', 2],
+    ['San Mateo', 'California', 3],
+    ['Los Angeles', 'California', 4],
+    ['New York City', 'New York', 5]
+]
+"""
 
 def _cmd(command):
     logging.debug(command)
@@ -87,36 +101,78 @@ def moving_average(interval, window_size):
     return np.convolve(interval, window, 'same')
 
 
-def add_labels(x, y):
+def add_labels(ax, x, y):
     # zip joins x and y coordinates in pairs
     for x1, y1 in zip(x, y):
         label = "{}".format(int(y1))
-        plt.annotate(
+        ax.annotate(
             label,  # this is the text
             (x1, y1),  # this is the point to label
             textcoords="offset points",  # how to position the text
             xytext=(0, 10),  # distance from text to points (x,y)
             ha='center',  # horizontal alignment can be left, right or center
-            color='deepskyblue'
+            color='deepskyblue',
+            size=12
         )
 
 
-def plot_it(df, county, state, filename):
+def plot_it(df, county, state, filename, labels=False):
     x = df['date'].to_numpy()
     y = df['new_cases'].to_numpy()
-
-    plt.figure(figsize=(20, 8))
-    plt.scatter(x, y, color='deepskyblue')
-    add_labels(x, y)
-
     y_avg = moving_average(y, 5)
-    plt.plot(x, y_avg, color='blue')
 
-    plt.grid(axis='x', color='gray')
-    plt.title(label='Daily New Cases for ' + county + ' County, ' + state)
+    params = {'legend.fontsize': 22,
+              'figure.figsize': (15, 10),
+              'axes.labelsize': 18,
+              'axes.titlesize': 22,
+              'xtick.labelsize': 18,
+              'ytick.labelsize': 18}
+    pylab.rcParams.update(params)
+    import matplotlib.dates as mdates
+
+    fig, ax = plt.subplots()
+
+    # Plot data
+    ax.scatter(x, y, color='deepskyblue')
+    ax.plot(x, y_avg, color='blue')
+    ax.set_xlabel('Date')
+    ax.set_ylabel('New Cases')
+
+    # Add label values to data points
+    if labels:
+        add_labels(ax, x, y)
+
+    # Formatting
+    title = '{} County, {}'.format(county, state)
+    if len(df) == 60:
+        title += ' (Last 2 Months)'
+
+
+    ax.set_title(label=title, fontsize=22)
+    ax.grid(axis='x', color='gray')
+
+    # Rotate x axis dates
+    for label in ax.get_xticklabels():
+        label.set_rotation(50)
+        label.set_horizontalalignment('right')
+
+    # Make x axis dates shorter
+    myFmt = mdates.DateFormatter('%m/%d')
+    ax.xaxis.set_major_formatter(myFmt)
 
     plt.savefig(filename)
-    logging.info("Wrote to %s", filename)
+    logging.info("Wrote to {}".format(filename))
+
+def make_plots(df, county, state, label):
+    filename1 = IMAGEDIR + "/" + label + "_1.png"
+    df_county = df_onecounty(df, county, state)
+    plot_it(df_county, county, state, filename1)
+
+    filename2 = IMAGEDIR + "/" + label + "_2.png"
+    df2 = df_county.tail(60)
+    plot_it(df2, county, state, filename2, True)
+
+    return filename1, filename2
 
 
 def parse_args():
@@ -133,6 +189,8 @@ def main():
         os.makedirs(IMAGEDIR)
     if not os.path.exists(DATADIR):
         os.makedirs(DATADIR)
+    if not os.path.exists(WEBDIR):
+        os.makedirs(WEBDIR)
 
     # Download source data
     if args.skip:
@@ -144,16 +202,19 @@ def main():
     df = read_csvs()
 
     # Make graph png's
-    for county, state in COUNTIES:
+    for county, state, label in COUNTIES:
         logging.info("Transforming and plotting for county=%s ...", county)
+        img1, img2 = make_plots(df, county, state, label)
 
-        filename = IMAGEDIR + "/" + county.replace(" ", "_") + ".png"
-        df_county = df_onecounty(df, county, state)
-        plot_it(df_county, county, state, filename)
+        path = "{}/{}_1.png".format(WEBDIR, label)
+        _cmd("cp {} {}".format(img1, path))
+        logging.info("Copied %s to %s", img1, path)
 
-        filename = IMAGEDIR + "/" + county.replace(" ", "_") + "_short.png"
-        df2 = df_county.tail(60)
-        plot_it(df2, county, state, filename)
+        path = "{}/{}_2.png".format(WEBDIR, label)
+        _cmd("cp {} {}".format(img2, path))
+        logging.info("Copied %s to %s", img2, path)
+
+
 
 
 
