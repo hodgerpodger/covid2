@@ -1,7 +1,7 @@
 
 
 
-cd ~/git pullgithub/covid2
+cd ~/github/covid2
 source env/bin/activate
 
 git pull
