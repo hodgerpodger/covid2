@@ -8,6 +8,5 @@ sh update.sh
 python update.py --skip
 cd web
 php index.php > index.html
-
-# view index.html in browser
 ```
+
