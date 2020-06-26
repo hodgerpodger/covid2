@@ -7,7 +7,7 @@ source env/bin/activate
 git pull
 
 python update.py
-cd web
+cd docs
 php index.php > index.html
 
 git add .
