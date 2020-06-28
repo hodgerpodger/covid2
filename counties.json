@@ -5,5 +5,6 @@
     ["Los Angeles","California", "losangeles", 10040000],
     ["New York City","New York", "newyorkcity", 8399000],
     ["Clark","Nevada","clark", 2267000],
-    ["Miami-Dade","Florida","miamidade", 2717000]
+    ["Miami-Dade","Florida","miamidade", 2717000],
+    ["Dallas","Texas","dallas", 2636000]
 ]
