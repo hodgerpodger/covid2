@@ -21,7 +21,7 @@
 
   <div class="container-fluid">
 
-    <h2>Daily New Cases</h2>
+    <h2>Covid Daily New Cases</h2>
 
 <?php
 // usage: php index.php > index.html

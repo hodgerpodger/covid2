@@ -33,6 +33,7 @@ def _cmd(command):
     logging.debug(command)
     os.system(command)
 
+
 def download_hopkins():
     _cmd("bash download_hopkins.sh")
 
@@ -54,7 +55,7 @@ def get_filenames():
 def read_csvs():
     logging.info("Reading csv's into pandas dataframe ...")
 
-    # Get data from multiple csv's into one dataframe
+    # Get data from all csv's (one for each date) into one dataframe
     csvs = get_filenames()
     df = None
     for i in range(len(csvs)):
@@ -84,9 +85,10 @@ def df_onecounty(df, county, state):
     return temp
 
 
-def moving_average(interval, window_size):
-    window = np.ones(int(window_size)) / float(window_size)
-    return np.convolve(interval, window, 'same')
+def moving_average(y, N=5):
+    y_padded = np.pad(y, (N // 2, N - 1 - N // 2), mode='edge')
+    y_smooth = np.convolve(y_padded, np.ones((N,)) / N, mode='valid')
+    return y_smooth
 
 
 def add_labels(ax, x, y):
@@ -104,10 +106,10 @@ def add_labels(ax, x, y):
         )
 
 
-def plot_it(df, county, state, filename, labels, population):
+def plot_county(df, county, state, filename, labels, population):
     x = df['date'].to_numpy()
     y = df['new_cases'].to_numpy()
-    y_avg = moving_average(y, 5)
+    y_avg = moving_average(y)
 
     params = {'legend.fontsize': 22,
               'figure.figsize': (15, 10),
@@ -155,14 +157,15 @@ def plot_it(df, county, state, filename, labels, population):
     plt.savefig(filename)
     logging.info("Wrote to {}".format(filename))
 
+
 def make_plots(df, county, state, label, population):
     filename1 = IMAGEDIR + "/" + label + "_1.png"
     df_county = df_onecounty(df, county, state)
-    plot_it(df_county, county, state, filename1, False, population)
+    plot_county(df_county, county, state, filename1, False, population)
 
     filename2 = IMAGEDIR + "/" + label + "_2.png"
     df2 = df_county.tail(60)
-    plot_it(df2, county, state, filename2, True, population)
+    plot_county(df2, county, state, filename2, True, population)
 
     return filename1, filename2
 
@@ -173,6 +176,7 @@ def parse_args():
                         help='skip download of source data step')
     args = parser.parse_args()
     return args
+
 
 def main():
     args = parse_args()
@@ -206,10 +210,7 @@ def main():
         _cmd("cp {} {}".format(img2, path))
         logging.info("Copied %s to %s", img2, path)
 
-
-
-
-
+    #plot_combine(df)
 
 
 if __name__ == "__main__":
