@@ -41,6 +41,8 @@ foreach ($counties as $index => $array) {
 }
 echo "</ul>\n";
 
+$params = "?" . time();
+
 foreach ($counties as $index => $array) {
     $county = $array[0] . " County";
     $label = $array[2];
@@ -49,8 +51,8 @@ foreach ($counties as $index => $array) {
     <div class=\"row\"><h4>$county</h4></div>
     <div class=\"row\">
         <a name=\"{$label}\"></a>
-        <div class=\"col-6\"><a href=\"images/{$label}_1.png\"><img src=\"images/{$label}_1.png\"></a></div>
-        <div class=\"col-6\"><a href=\"images/{$label}_2.png\"><img src=\"images/{$label}_2.png\"></a></div>
+        <div class=\"col-6\"><a href=\"images/{$label}_1.png{$params}\"><img src=\"images/{$label}_1.png{$params}\"></a></div>
+        <div class=\"col-6\"><a href=\"images/{$label}_2.png{$params}\"><img src=\"images/{$label}_2.png{$params}\"></a></div>
     </div>
     ";
 }
