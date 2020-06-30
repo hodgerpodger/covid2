@@ -37,11 +37,22 @@ foreach ($counties as $index => $array) {
 
     echo "<li><a href=\"#{$label}\"> {$county} County </a></li>\n";
 
-
 }
 echo "</ul>\n";
 
 $params = "?" . time();
+
+echo "
+<div class=\"row\"><h4>All Counties</h4></div>
+
+<div class=\"row\">
+       <div class=\"col-6\">
+            <a href=\"images/combine.png{$params}\">
+            <img src=\"images/combine.png{$params}\"></a>
+       </div>
+</div>
+";
+
 
 foreach ($counties as $index => $array) {
     $county = $array[0] . " County";

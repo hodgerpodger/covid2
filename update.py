@@ -28,6 +28,12 @@ with open(COUNTIES_JSON) as json_file:
     data = json.load(json_file)
     COUNTIES = data
 
+PARAMS = {'legend.fontsize': 22,
+          'figure.figsize': (15, 10),
+          'axes.labelsize': 18,
+          'axes.titlesize': 22,
+          'xtick.labelsize': 18,
+          'ytick.labelsize': 18}
 
 def _cmd(command):
     logging.debug(command)
@@ -111,38 +117,41 @@ def plot_county(df, county, state, filename, labels, population):
     y = df['new_cases'].to_numpy()
     y_avg = moving_average(y)
 
-    params = {'legend.fontsize': 22,
-              'figure.figsize': (15, 10),
-              'axes.labelsize': 18,
-              'axes.titlesize': 22,
-              'xtick.labelsize': 18,
-              'ytick.labelsize': 18}
-    pylab.rcParams.update(params)
-
     fig, ax = plt.subplots()
+    _format_plot(ax)
 
     # Plot data
     ax.scatter(x, y, color='deepskyblue', label='new cases')
     ax.plot(x, y_avg, color='blue', label='new cases moving average')
-    ax.set_xlabel('Date')
-    ax.set_ylabel('New Cases')
 
     # Plot phase 2 line
     cases = float(population) / 100000.0 / 14.0 * 25.0
     ax.plot(x, len(x)*[cases], label='phase 2 entry ({})'.format(round(cases)), color='orange')
 
-    # Add legend
-    ax.legend()
-
     # Add label values to data points
     if labels:
         add_labels(ax, x, y)
 
-    # Formatting
+    # Text
     title = '{} County, {}'.format(county, state)
     if len(df) == 60:
         title += ' (Last 2 Months)'
-    ax.set_title(label=title, fontsize=22)
+    ax.set_title(label=title)
+    ax.set_xlabel('Date')
+    ax.set_ylabel('New Cases')
+
+    # Add legend
+    ax.legend()
+
+
+
+    plt.savefig(filename)
+    logging.info("Wrote to {}".format(filename))
+
+
+def _format_plot(ax):
+
+
     ax.grid(axis='x', color='gray')
 
     # Rotate x axis dates
@@ -154,10 +163,6 @@ def plot_county(df, county, state, filename, labels, population):
     myFmt = mdates.DateFormatter('%m/%d')
     ax.xaxis.set_major_formatter(myFmt)
 
-    plt.savefig(filename)
-    logging.info("Wrote to {}".format(filename))
-
-
 def make_plots(df, county, state, label, population):
     filename1 = IMAGEDIR + "/" + label + "_1.png"
     df_county = df_onecounty(df, county, state)
@@ -168,6 +173,38 @@ def make_plots(df, county, state, label, population):
     plot_county(df2, county, state, filename2, True, population)
 
     return filename1, filename2
+
+
+def plot_combine(df, filename):
+    fig, ax = plt.subplots()
+    _format_plot(ax)
+
+    # Plot line for each county
+    for county, state, label, population in COUNTIES:
+        df_county = df_onecounty(df, county, state)
+        x = df_county['date'].to_numpy()
+        y = df_county['new_cases'].to_numpy()
+        y_per = y * 1000000 / population
+        y_avg = moving_average(y_per)
+
+        ax.plot(x, y_avg, label=label)
+
+    # Plot phase 2 line
+    cases = 25.0 / 14.0
+    ax.plot(x, len(x) * [cases], label='phase 2 entry ({})'.format(round(cases, 2)), color='orange')
+
+    # Text
+    ax.set_title(label="Daily New Cases Per 100,000 residents", fontsize=22)
+    ax.set_xlabel('Date')
+    ax.set_ylabel('New Cases')
+
+    # Add legend
+    ax.legend()
+
+
+
+    plt.savefig(filename)
+    logging.info("Wrote to {}".format(filename))
 
 
 def parse_args():
@@ -198,6 +235,7 @@ def main():
     df = read_csvs()
 
     # Make graph png's
+    pylab.rcParams.update(PARAMS)
     for county, state, label, population in COUNTIES:
         logging.info("Transforming and plotting for county=%s ...", county)
         img1, img2 = make_plots(df, county, state, label, population)
@@ -210,7 +248,8 @@ def main():
         _cmd("cp {} {}".format(img2, path))
         logging.info("Copied %s to %s", img2, path)
 
-    #plot_combine(df)
+    path = "{}/combine.png".format(WEBDIR)
+    plot_combine(df, path)
 
 
 if __name__ == "__main__":
