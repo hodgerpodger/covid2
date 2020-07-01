@@ -35,7 +35,7 @@ foreach ($counties as $index => $array) {
     $state = $array[1];
     $label = $array[2];
 
-    echo "<li><a href=\"#{$label}\"> {$county} County </a></li>\n";
+    echo "<li><a href=\"#{$label}\"> {$county} County, {$state} </a></li>\n";
 
 }
 echo "</ul>\n";
